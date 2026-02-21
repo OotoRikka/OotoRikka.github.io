@@ -1,0 +1,390 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>GAN图像生成 | OotoRikka's Blog</title><meta name="author" content="OotoRikka"><meta name="copyright" content="OotoRikka"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="文件一：训练脚本（GAN_train.py）$s$ 1. 导入库123456import torchimport torch.nn as nnimport torchvisionimport osfrom torch.utils.data import DataLoaderfrom tqdm import tqdm  torch：PyTorch 核心库，提供张量操作、自动求导、GPU 支持。 to">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GAN图像生成">
+<meta property="og:url" content="https://ootorikka.github.io/2026/02/21/GAN%E5%9B%BE%E5%83%8F%E7%94%9F%E6%88%90/index.html">
+<meta property="og:site_name" content="OotoRikka&#39;s Blog">
+<meta property="og:description" content="文件一：训练脚本（GAN_train.py）$s$ 1. 导入库123456import torchimport torch.nn as nnimport torchvisionimport osfrom torch.utils.data import DataLoaderfrom tqdm import tqdm  torch：PyTorch 核心库，提供张量操作、自动求导、GPU 支持。 to">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://imgheybox.max-c.com/avatar/2023/05/21/8240d7f259bc3f23ab194efec4bed575.jpeg?imageMogr2/thumbnail/400x400%3E">
+<meta property="article:published_time" content="2026-02-21T07:15:36.000Z">
+<meta property="article:modified_time" content="2026-02-21T08:03:21.345Z">
+<meta property="article:author" content="OotoRikka">
+<meta property="article:tag" content="blog">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://imgheybox.max-c.com/avatar/2023/05/21/8240d7f259bc3f23ab194efec4bed575.jpeg?imageMogr2/thumbnail/400x400%3E"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "GAN图像生成",
+  "url": "https://ootorikka.github.io/2026/02/21/GAN%E5%9B%BE%E5%83%8F%E7%94%9F%E6%88%90/",
+  "image": "https://imgheybox.max-c.com/avatar/2023/05/21/8240d7f259bc3f23ab194efec4bed575.jpeg?imageMogr2/thumbnail/400x400%3E",
+  "datePublished": "2026-02-21T07:15:36.000Z",
+  "dateModified": "2026-02-21T08:03:21.345Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "OotoRikka",
+      "url": "https://ootorikka.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/images/wang.png"><link rel="canonical" href="https://ootorikka.github.io/2026/02/21/GAN%E5%9B%BE%E5%83%8F%E7%94%9F%E6%88%90/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'GAN图像生成',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">OotoRikka's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">GAN图像生成</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  Back to Home</span></span></a></span><div id="menus"></div></nav><div id="post-info"><h1 class="post-title">GAN图像生成</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-02-21T07:15:36.000Z" title="Created 2026-02-21 15:15:36">2026-02-21</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-02-21T08:03:21.345Z" title="Updated 2026-02-21 16:03:21">2026-02-21</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h2 id="文件一：训练脚本（GAN-train-py）"><a href="#文件一：训练脚本（GAN-train-py）" class="headerlink" title="文件一：训练脚本（GAN_train.py）"></a>文件一：训练脚本（GAN_train.py）</h2><p>$s$</p>
+<h3 id="1-导入库"><a href="#1-导入库" class="headerlink" title="1. 导入库"></a>1. 导入库</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"><span class="keyword">import</span> torchvision</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">from</span> torch.utils.data <span class="keyword">import</span> DataLoader</span><br><span class="line"><span class="keyword">from</span> tqdm <span class="keyword">import</span> tqdm</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>torch</code>：PyTorch 核心库，提供张量操作、自动求导、GPU 支持。</li>
+<li><code>torch.nn</code>：神经网络模块，包含层（卷积、全连接）、损失函数、容器</li>
+<li><code>torchvision</code>：处理图像的工具库，包含常用数据集、图像变换、保存图像等功能。</li>
+<li><code>os</code>：操作系统接口，用于创建文件夹、处理路径。</li>
+<li><code>DataLoader</code>：数据加载器，将数据集包装为可迭代的批量数据，支持多进程、打乱等。</li>
+<li><code>tqdm</code>：进度条工具，显示训练迭代进度。</li>
+</ul>
+<h3 id="2-参数配置类-Config"><a href="#2-参数配置类-Config" class="headerlink" title="2. 参数配置类 Config"></a>2. 参数配置类 <code>Config</code></h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Config</span>():</span><br><span class="line">    result_save_path = <span class="string">&#x27;results/&#x27;</span>          <span class="comment"># 生成图像保存路径</span></span><br><span class="line">    d_net_path = <span class="string">&#x27;snapshots/dnet.pth&#x27;</span>       <span class="comment"># 判别器权重保存路径</span></span><br><span class="line">    g_net_path = <span class="string">&#x27;snapshots/gnet.pth&#x27;</span>       <span class="comment"># 生成器权重保存路径</span></span><br><span class="line">    img_path = <span class="string">&#x27;face/&#x27;</span>                       <span class="comment"># 训练图像文件夹路径</span></span><br><span class="line">    img_size = <span class="number">96</span>                             <span class="comment"># 输入图像裁剪尺寸</span></span><br><span class="line">    batch_size = <span class="number">216</span>                          <span class="comment"># 批量大小</span></span><br><span class="line">    max_epoch = <span class="number">300</span>                            <span class="comment"># 训练轮数</span></span><br><span class="line">    noise_dim = <span class="number">100</span>                            <span class="comment"># 生成器输入噪声维度</span></span><br><span class="line">    feats_channel = <span class="number">64</span>                         <span class="comment"># 特征图基础通道数</span></span><br><span class="line"></span><br><span class="line">opt = Config()  <span class="comment"># 实例化配置对象</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>所有超参数集中管理，方便修改。</li>
+<li><code>noise_dim</code>：生成器接收的随机噪声向量的长度。</li>
+<li><code>feats_channel</code>：控制网络中特征图的通道数基数，后续层会乘以倍数（8,4,2,1）。</li>
+</ul>
+<p>创建保存结果的文件夹：<br><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="keyword">not</span> os.path.exists(<span class="string">&#x27;results&#x27;</span>):</span><br><span class="line">    os.mkdir(<span class="string">&#x27;results&#x27;</span>)</span><br><span class="line"><span class="keyword">if</span> <span class="keyword">not</span> os.path.exists(<span class="string">&#x27;snapshots&#x27;</span>):</span><br><span class="line">    os.mkdir(<span class="string">&#x27;snapshots&#x27;</span>)</span><br></pre></td></tr></table></figure></p>
+<h3 id="3-生成网络-Gnet"><a href="#3-生成网络-Gnet" class="headerlink" title="3. 生成网络 Gnet"></a>3. 生成网络 <code>Gnet</code></h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Gnet</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, opt</span>):</span><br><span class="line">        <span class="built_in">super</span>(Gnet, <span class="variable language_">self</span>).__init__()</span><br><span class="line">        <span class="variable language_">self</span>.feats = opt.feats_channel</span><br><span class="line">        <span class="variable language_">self</span>.generate = nn.Sequential(</span><br><span class="line">            <span class="comment"># 第1层：转置卷积 + BN + ReLU</span></span><br><span class="line">            nn.ConvTranspose2d(opt.noise_dim, <span class="variable language_">self</span>.feats * <span class="number">8</span>, kernel_size=<span class="number">4</span>, stride=<span class="number">1</span>, padding=<span class="number">0</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(<span class="variable language_">self</span>.feats * <span class="number">8</span>),</span><br><span class="line">            nn.ReLU(inplace=<span class="literal">True</span>),</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 第2层：转置卷积（上采样2倍）</span></span><br><span class="line">            nn.ConvTranspose2d(<span class="variable language_">self</span>.feats * <span class="number">8</span>, <span class="variable language_">self</span>.feats * <span class="number">4</span>, kernel_size=<span class="number">4</span>, stride=<span class="number">2</span>, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(<span class="variable language_">self</span>.feats * <span class="number">4</span>),</span><br><span class="line">            nn.ReLU(inplace=<span class="literal">True</span>),</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 第3层：转置卷积（上采样2倍）</span></span><br><span class="line">            nn.ConvTranspose2d(<span class="variable language_">self</span>.feats * <span class="number">4</span>, <span class="variable language_">self</span>.feats * <span class="number">2</span>, kernel_size=<span class="number">4</span>, stride=<span class="number">2</span>, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(<span class="variable language_">self</span>.feats * <span class="number">2</span>),</span><br><span class="line">            nn.ReLU(inplace=<span class="literal">True</span>),</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 第4层：转置卷积（上采样2倍）</span></span><br><span class="line">            nn.ConvTranspose2d(<span class="variable language_">self</span>.feats * <span class="number">2</span>, <span class="variable language_">self</span>.feats, kernel_size=<span class="number">4</span>, stride=<span class="number">2</span>, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(<span class="variable language_">self</span>.feats),</span><br><span class="line">            nn.ReLU(inplace=<span class="literal">True</span>),</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 第5层：转置卷积（上采样到96x96，输出3通道）</span></span><br><span class="line">            nn.ConvTranspose2d(<span class="variable language_">self</span>.feats, <span class="number">3</span>, kernel_size=<span class="number">5</span>, stride=<span class="number">3</span>, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.Tanh()   <span class="comment"># 输出归一化到[-1,1]</span></span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>.generate(x)</span><br></pre></td></tr></table></figure>
+<p><strong>结构解析</strong>：</p>
+<ul>
+<li>输入：噪声张量形状为 <code>(batch_size, noise_dim, 1, 1)</code>。</li>
+<li>每一层转置卷积（又称解卷积）负责将特征图尺寸扩大，通道数逐渐减少，最终生成与真实图像相同尺寸（96×96）的RGB图像。</li>
+<li>转置卷积尺寸计算公式：  <script type="math/tex; mode=display">
+H_{\text{out}} = (H_{\text{in}} - 1) \times \text{stride} + \text{kernel\_size} - 2 \times \text{padding}</script></li>
+<li>具体计算：<ul>
+<li>第1层：输入1×1，kernel=4, stride=1, padding=0 → 输出4×4，通道512（64×8）。</li>
+<li>第2层：输入4×4，kernel=4, stride=2, padding=1 → 输出8×8，通道256。</li>
+<li>第3层：输入8×8 → 输出16×16，通道128。</li>
+<li>第4层：输入16×16 → 输出32×32，通道64。</li>
+<li>第5层：输入32×32，kernel=5, stride=3, padding=1 → 输出96×96，通道3。</li>
+</ul>
+</li>
+<li>批归一化（BatchNorm）加速训练收敛，稳定梯度。</li>
+<li>ReLU激活函数（最后一层用Tanh）引入非线性，Tanh将像素值映射到[-1,1]，与ToTensor归一化后的真实图像范围一致。</li>
+</ul>
+<h3 id="4-判别网络-Dnet"><a href="#4-判别网络-Dnet" class="headerlink" title="4. 判别网络 Dnet"></a>4. 判别网络 <code>Dnet</code></h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Dnet</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, opt</span>):</span><br><span class="line">        <span class="built_in">super</span>(Dnet, <span class="variable language_">self</span>).__init__()</span><br><span class="line">        <span class="variable language_">self</span>.feats = opt.feats_channel</span><br><span class="line">        <span class="variable language_">self</span>.discrim = nn.Sequential(</span><br><span class="line">            <span class="comment"># 第1层：卷积 + LeakyReLU</span></span><br><span class="line">            nn.Conv2d(<span class="number">3</span>, <span class="variable language_">self</span>.feats, kernel_size=<span class="number">5</span>, stride=<span class="number">3</span>, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.LeakyReLU(<span class="number">0.2</span>, inplace=<span class="literal">True</span>),</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 第2层：卷积 + BN + LeakyReLU</span></span><br><span class="line">            nn.Conv2d(<span class="variable language_">self</span>.feats, <span class="variable language_">self</span>.feats * <span class="number">2</span>, kernel_size=<span class="number">4</span>, stride=<span class="number">2</span>, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(<span class="variable language_">self</span>.feats * <span class="number">2</span>),</span><br><span class="line">            nn.LeakyReLU(<span class="number">0.2</span>, <span class="literal">True</span>),</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 第3层：卷积 + BN + LeakyReLU</span></span><br><span class="line">            nn.Conv2d(<span class="variable language_">self</span>.feats * <span class="number">2</span>, <span class="variable language_">self</span>.feats * <span class="number">4</span>, kernel_size=<span class="number">4</span>, stride=<span class="number">2</span>, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(<span class="variable language_">self</span>.feats * <span class="number">4</span>),</span><br><span class="line">            nn.LeakyReLU(<span class="number">0.2</span>, <span class="literal">True</span>),</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 第4层：卷积 + BN + LeakyReLU</span></span><br><span class="line">            nn.Conv2d(<span class="variable language_">self</span>.feats * <span class="number">4</span>, <span class="variable language_">self</span>.feats * <span class="number">8</span>, kernel_size=<span class="number">4</span>, stride=<span class="number">2</span>, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(<span class="variable language_">self</span>.feats * <span class="number">8</span>),</span><br><span class="line">            nn.LeakyReLU(<span class="number">0.2</span>, <span class="literal">True</span>),</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 第5层：卷积 + Sigmoid</span></span><br><span class="line">            nn.Conv2d(<span class="variable language_">self</span>.feats * <span class="number">8</span>, <span class="number">1</span>, kernel_size=<span class="number">4</span>, stride=<span class="number">1</span>, padding=<span class="number">0</span>, bias=<span class="literal">True</span>),</span><br><span class="line">            nn.Sigmoid()</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>.discrim(x).view(-<span class="number">1</span>)   <span class="comment"># 将输出展平为(batch_size,)</span></span><br></pre></td></tr></table></figure>
+<p><strong>结构解析</strong>：</p>
+<ul>
+<li>输入：真实或生成图像，尺寸 <code>(batch_size, 3, 96, 96)</code>。</li>
+<li>普通卷积逐步下采样，提取特征，最后输出一个标量概率（通过Sigmoid压缩到[0,1]）。</li>
+<li><p>尺寸计算公式：</p>
+<script type="math/tex; mode=display">
+H_{\text{out}} = \left\lfloor \frac{H_{\text{in}} + 2 \times \text{padding} - \text{kernel\_size}}{\text{stride}} \right\rfloor + 1</script></li>
+<li><p>具体计算：</p>
+<ul>
+<li>第1层：输入96×96，kernel=5, stride=3, padding=1 → 输出32×32，通道64。</li>
+<li>第2层：输入32×32，kernel=4, stride=2, padding=1 → 输出16×16，通道128。</li>
+<li>第3层：输入16×16 → 输出8×8，通道256。</li>
+<li>第4层：输入8×8 → 输出4×4，通道512。</li>
+<li>第5层：输入4×4，kernel=4, stride=1, padding=0 → 输出1×1，通道1 → 经过Sigmoid得到概率。</li>
+</ul>
+</li>
+<li>使用LeakyReLU（负斜率0.2）防止神经元死亡，缓解梯度消失。</li>
+<li>批归一化（除第一层外）稳定训练。</li>
+<li><code>view(-1)</code>将形状 <code>(batch_size,1,1,1)</code> 变为 <code>(batch_size,)</code>，即变成一个矩阵，每行对应一张图片的各个参数，总共有batch_size行，方便与标签计算损失。</li>
+</ul>
+<h3 id="5-数据准备"><a href="#5-数据准备" class="headerlink" title="5. 数据准备"></a>5. 数据准备</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">transforms = torchvision.transforms.Compose([</span><br><span class="line">    torchvision.transforms.Resize(opt.img_size),</span><br><span class="line">    torchvision.transforms.CenterCrop(opt.img_size),</span><br><span class="line">    torchvision.transforms.ToTensor()   <span class="comment"># 将PIL图像或numpy数组转换为Tensor，并缩放到[0,1]</span></span><br><span class="line">])</span><br><span class="line"></span><br><span class="line">dataset = torchvision.datasets.ImageFolder(root=opt.img_path, transform=transforms)</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>ImageFolder</code>要求数据按文件夹组织，每个子文件夹代表一个类别，自动分配标签。对于人脸数据集，可能只有一个子文件夹。</li>
+<li>变换步骤：先Resize到指定尺寸，再中心裁剪保证图像尺寸一致，最后转为Tensor（值范围[0,1]）。</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">dataloader = DataLoader(</span><br><span class="line">    dataset,</span><br><span class="line">    batch_size=opt.batch_size,</span><br><span class="line">    num_workers=<span class="number">0</span>,          <span class="comment"># 原为0，可适当增加加速数据加载</span></span><br><span class="line">    pin_memory=<span class="literal">True</span>,        <span class="comment"># 锁定内存，加速CPU→GPU传输</span></span><br><span class="line">    prefetch_factor=<span class="number">2</span>,      <span class="comment"># 预加载2批数据（需PyTorch≥1.7）</span></span><br><span class="line">    drop_last=<span class="literal">True</span>,         <span class="comment"># 丢弃最后不足batch_size的数据</span></span><br><span class="line">    shuffle=<span class="literal">True</span>            <span class="comment"># 每个epoch打乱数据</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>num_workers</code>：子进程数，0表示主进程加载。若CPU性能足够可设为&gt;0，提高数据加载并行度。</li>
+<li><code>pin_memory=True</code>：将张量固定在内存中，使GPU能更快地访问。</li>
+<li><code>prefetch_factor</code>：每个worker预先加载的批次数。</li>
+</ul>
+<h3 id="6-设备与网络实例化"><a href="#6-设备与网络实例化" class="headerlink" title="6. 设备与网络实例化"></a>6. 设备与网络实例化</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">device = torch.device(<span class="string">&quot;cuda:0&quot;</span> <span class="keyword">if</span> torch.cuda.is_available() <span class="keyword">else</span> <span class="string">&quot;cpu&quot;</span>)</span><br><span class="line">g_net.to(device)</span><br><span class="line">d_net.to(device)</span><br></pre></td></tr></table></figure>
+<h3 id="7-优化器与损失函数"><a href="#7-优化器与损失函数" class="headerlink" title="7. 优化器与损失函数"></a>7. 优化器与损失函数</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">optimize_g = torch.optim.Adam(g_net.parameters(), lr=<span class="number">2e-4</span>, betas=(<span class="number">0.5</span>, <span class="number">0.999</span>))</span><br><span class="line">optimize_d = torch.optim.Adam(d_net.parameters(), lr=<span class="number">2e-4</span>, betas=(<span class="number">0.5</span>, <span class="number">0.999</span>))</span><br><span class="line">criterions = nn.BCELoss().to(device)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Adam优化器，学习率2e-4，β1=0.5（DCGAN推荐，有助于稳定训练）。</li>
+<li>损失函数：二分类交叉熵（Binary Cross Entropy），适用于判别器输出概率与标签之间的比较。</li>
+</ul>
+<h3 id="8-标签与噪声"><a href="#8-标签与噪声" class="headerlink" title="8. 标签与噪声"></a>8. 标签与噪声</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">true_labels = torch.ones(opt.batch_size).to(device)</span><br><span class="line">fake_labels = torch.zeros(opt.batch_size).to(device)</span><br><span class="line"></span><br><span class="line">noises = torch.randn(opt.batch_size, opt.noise_dim, <span class="number">1</span>, <span class="number">1</span>).to(device)</span><br><span class="line">test_noises = torch.randn(opt.batch_size, opt.noise_dim, <span class="number">1</span>, <span class="number">1</span>).to(device)</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>true_labels</code>：真实图像对应的目标概率（1），<code>fake_labels</code>：生成图像对应的目标概率（0）。</li>
+<li><code>noises</code>：训练过程中动态更新的噪声，用于生成假图像。</li>
+<li><code>test_noises</code>：固定的噪声，用于每个epoch结束后生成示例图像，便于观察生成效果。</li>
+</ul>
+<h3 id="9-加载已有模型（可选）"><a href="#9-加载已有模型（可选）" class="headerlink" title="9. 加载已有模型（可选）"></a>9. 加载已有模型（可选）</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    g_net.load_state_dict(torch.load(opt.g_net_path))</span><br><span class="line">    d_net.load_state_dict(torch.load(opt.d_net_path))</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;加载成功，继续训练&#x27;</span>)</span><br><span class="line"><span class="keyword">except</span>:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;加载失败，重新训练&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>如果之前保存过权重，则加载继续训练；否则从头开始。</li>
+</ul>
+<h3 id="10-训练循环"><a href="#10-训练循环" class="headerlink" title="10. 训练循环"></a>10. 训练循环</h3><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    <span class="keyword">for</span> epoch <span class="keyword">in</span> <span class="built_in">range</span>(opt.max_epoch):</span><br><span class="line">        <span class="keyword">for</span> itertion, (img, _) <span class="keyword">in</span> tqdm(<span class="built_in">enumerate</span>(dataloader)):</span><br><span class="line">            real_img = img.to(device)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 训练判别器</span></span><br><span class="line">            <span class="keyword">if</span> itertion % <span class="number">1</span> == <span class="number">0</span>: <span class="comment">#可修改比例</span></span><br><span class="line">                optimize_d.zero_grad()</span><br><span class="line"></span><br><span class="line">                <span class="comment"># 真实图像损失</span></span><br><span class="line">                output = d_net(real_img)</span><br><span class="line">                d_real_loss = criterions(output, true_labels)</span><br><span class="line"></span><br><span class="line">                <span class="comment"># 生成图像损失</span></span><br><span class="line">                fake_image = g_net(noises.detach()).detach()</span><br><span class="line">                output = d_net(fake_image)</span><br><span class="line">                d_fake_loss = criterions(output, fake_labels)</span><br><span class="line"></span><br><span class="line">                d_loss = (d_fake_loss + d_real_loss) / <span class="number">2</span></span><br><span class="line">                d_loss.backward()</span><br><span class="line">                optimize_d.step()</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 训练生成器</span></span><br><span class="line">            <span class="keyword">if</span> itertion % <span class="number">1</span> == <span class="number">0</span>:</span><br><span class="line">                optimize_g.zero_grad()</span><br><span class="line">                noises.data.copy_(torch.randn(opt.batch_size, opt.noise_dim, <span class="number">1</span>, <span class="number">1</span>))  <span class="comment"># 更新噪声</span></span><br><span class="line"></span><br><span class="line">                fake_image = g_net(noises)</span><br><span class="line">                output = d_net(fake_image)</span><br><span class="line">                g_loss = criterions(output, true_labels)   <span class="comment"># 生成器希望判别器输出1</span></span><br><span class="line"></span><br><span class="line">                g_loss.backward()</span><br><span class="line">                optimize_g.step()</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 每个epoch结束后的验证与保存</span></span><br><span class="line">        vid_fake_image = g_net(test_noises)</span><br><span class="line">        torchvision.utils.save_image(vid_fake_image.data[:<span class="number">16</span>], <span class="string">&quot;%s/%s.png&quot;</span> % (opt.result_save_path, epoch), normalize=<span class="literal">True</span>)</span><br><span class="line">        torch.save(d_net.state_dict(), opt.d_net_path)</span><br><span class="line">        torch.save(g_net.state_dict(), opt.g_net_path)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">&#x27;epoch:&#x27;</span>, epoch, <span class="string">&#x27;---D-loss:---&#x27;</span>, d_loss.item(), <span class="string">&#x27;---G-loss:---&#x27;</span>, g_loss.item())</span><br></pre></td></tr></table></figure>
+<p><strong>训练逻辑</strong>：</p>
+<ul>
+<li>每个iteration中，判别器和生成器各更新一次（可修改比例）。</li>
+<li><strong>判别器训练</strong>：<ul>
+<li>输入真实图像，计算输出与真实标签（1）的损失 <code>d_real_loss</code>。</li>
+<li>用当前噪声生成假图像（使用<code>detach()</code>切断生成器梯度），计算输出与假标签（0）的损失 <code>d_fake_loss</code>。</li>
+<li>平均两者作为判别器总损失，反向传播更新判别器参数。</li>
+</ul>
+</li>
+<li><strong>生成器训练</strong>：<ul>
+<li>更新噪声（重新采样），生成假图像。</li>
+<li>将假图像送入判别器，目标是让判别器输出接近1（即欺骗判别器），计算损失 <code>g_loss</code>。</li>
+<li>反向传播更新生成器参数。</li>
+</ul>
+</li>
+<li><strong>验证</strong>：每个epoch后用固定噪声 <code>test_noises</code> 生成一批图像，保存前16张，观察生成质量。</li>
+<li><strong>保存模型</strong>：保存判别器和生成器的权重，以便恢复训练或推理。</li>
+</ul>
+<hr>
+<h2 id="文件二：推理脚本（inference-py）"><a href="#文件二：推理脚本（inference-py）" class="headerlink" title="文件二：推理脚本（inference.py）"></a>文件二：推理脚本（inference.py）</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"><span class="keyword">from</span> GAN_ <span class="keyword">import</span> Config, Gnet   <span class="comment"># 从训练脚本导入配置和生成器类</span></span><br><span class="line"><span class="keyword">import</span> torchvision</span><br><span class="line"></span><br><span class="line">device = torch.device(<span class="string">&#x27;cuda&#x27;</span> <span class="keyword">if</span> torch.cuda.is_available() <span class="keyword">else</span> <span class="string">&#x27;cpu&#x27;</span>)</span><br><span class="line">opt = Config()</span><br><span class="line">g_net = Gnet(opt).to(device)</span><br><span class="line"></span><br><span class="line">ckpt = <span class="string">&#x27;snapshots/gnet.pth&#x27;</span>                     <span class="comment"># 训练好的生成器权重</span></span><br><span class="line">ckpt_dict = torch.load(ckpt)                    <span class="comment"># 加载权重字典</span></span><br><span class="line">g_net.load_state_dict(ckpt_dict)                 <span class="comment"># 加载到网络中</span></span><br><span class="line">g_net.<span class="built_in">eval</span>()                                      <span class="comment"># 设置为评估模式（关闭dropout等）</span></span><br><span class="line"></span><br><span class="line">input_noise = torch.randn(opt.batch_size, opt.noise_dim, <span class="number">1</span>, <span class="number">1</span>).to(device)</span><br><span class="line">out_img = g_net(input_noise)                      <span class="comment"># 生成图像</span></span><br><span class="line"></span><br><span class="line">torchvision.utils.save_image(out_img.data[<span class="number">0</span>], <span class="string">&quot;%s/inference.png&quot;</span> % (opt.result_save_path), normalize=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+<ul>
+<li>加载训练好的生成器，输入随机噪声，生成单张图像并保存。</li>
+<li><code>g_net.eval()</code> 很重要，因为生成器中包含BatchNorm，在推理时应使用全局统计量而非当前batch统计量。</li>
+</ul>
+<hr>
+<h2 id="神经网络结构"><a href="#神经网络结构" class="headerlink" title="神经网络结构"></a>神经网络结构</h2><h3 id="1-生成器使用转置卷积逐步上采样"><a href="#1-生成器使用转置卷积逐步上采样" class="headerlink" title="1. 生成器使用转置卷积逐步上采样"></a>1. 生成器使用转置卷积逐步上采样</h3><ul>
+<li>传统GAN生成器通常使用全连接层将噪声映射为图像，但全连接层会丢失空间结构信息。DCGAN首次引入全卷积架构，通过转置卷积将低维噪声逐步“解码”为高分辨率图像，保留了空间相关性，生成图像质量更高。</li>
+<li>步长&gt;1的转置卷积相当于上采样+卷积，能学习到更丰富的上采样模式，而非简单的插值。</li>
+<li>通道数递减：浅层特征图通道多、尺寸小，负责捕捉整体结构；深层特征图通道少、尺寸大，负责精细纹理。这种金字塔结构与图像的多尺度特性吻合。</li>
+</ul>
+<h3 id="2-判别器使用步长卷积下采样"><a href="#2-判别器使用步长卷积下采样" class="headerlink" title="2. 判别器使用步长卷积下采样"></a>2. 判别器使用步长卷积下采样</h3><ul>
+<li>用带步长的卷积代替池化层，使网络自动学习下采样方式，保留更多信息。</li>
+<li>逐渐增加通道数，捕获越来越抽象的特征，最后通过单个神经元输出全局真伪概率。</li>
+</ul>
+<h3 id="3-批归一化（BN）的作用"><a href="#3-批归一化（BN）的作用" class="headerlink" title="3. 批归一化（BN）的作用"></a>3. 批归一化（BN）的作用</h3><ul>
+<li>缓解内部协变量偏移，加速训练收敛。</li>
+<li>允许使用更高的学习率，减少对初始化敏感度。</li>
+<li>在生成器中，BN有助于防止模式崩溃，使梯度传播更稳定。</li>
+<li>在判别器中，BN防止过拟合，提高泛化能力。但第一层通常不加BN，以免影响原始输入分布。</li>
+</ul>
+<h3 id="4-激活函数选择"><a href="#4-激活函数选择" class="headerlink" title="4. 激活函数选择"></a>4. 激活函数选择</h3><ul>
+<li><strong>生成器</strong>：隐藏层用ReLU，梯度不易饱和，计算高效；输出层用Tanh，将像素值约束到[-1,1]，与真实图像经ToTensor后的[0,1]范围不同，但可以通过调整真实图像预处理匹配[-1,1]（本代码未做，但Tanh仍适用，因为损失函数希望生成图像与真实图像分布相近，而真实图像经ToTensor为[0,1]，但判别器输入是真实图像也是[0,1]，所以生成器输出通过Tanh到[-1,1]后，与真实图像分布不一致？实际上需要将真实图像也归一化到[-1,1]才能匹配，否则判别器会学到区分0-1和-1-1。这是一个潜在问题。通常的做法是在数据预处理时用Normalize将图像从[0,1]转到[-1,1]。本代码未做，可能影响训练效果。但许多DCGAN实现确实将真实图像归一化到[-1,1]。</li>
+<li><strong>判别器</strong>：隐藏层用LeakyReLU，避免ReLU的“死亡”问题（负值梯度为0），使判别器对生成图像也能提供有意义的梯度。负斜率0.2是经验值。</li>
+</ul>
+<h3 id="5-损失函数与训练目标"><a href="#5-损失函数与训练目标" class="headerlink" title="5. 损失函数与训练目标"></a>5. 损失函数与训练目标</h3><ul>
+<li><p>采用二分类交叉熵，判别器学习区分真实与生成，生成器学习欺骗判别器。</p>
+</li>
+<li><p>训练过程可视为极小极大博弈：</p>
+<script type="math/tex; mode=display">
+  \min_G \max_D V(D, G) = \mathbb{E}_{x \sim p_{\text{data}}} [\log D(x)] + \mathbb{E}_{z \sim p_z} [\log(1 - D(G(z)))]</script></li>
+<li><p>实际实现中，生成器常优化 $log D(G(z))$而非 $log(1-D(G(z))$，以避免早期梯度饱和。</p>
+<p>​        本代码正是如此：$g<em>{loss} = criterions(output, true</em>{labels})$ 即最大化  $log D(G(z))$。</p>
+</li>
+</ul>
+<h3 id="6-优化器与超参数"><a href="#6-优化器与超参数" class="headerlink" title="6. 优化器与超参数"></a>6. 优化器与超参数</h3><ul>
+<li>Adam优化器（lr=2e-4, $β_1$=0.5, $β_2$=0.999）是DCGAN作者推荐的组合。β1取0.5而非默认0.9，可降低动量，使训练更稳定。</li>
+<li>批量大小216较大，有助于稳定判别器梯度，但需显存足够。</li>
+</ul>
+<h3 id="7-训练技巧与潜在问题"><a href="#7-训练技巧与潜在问题" class="headerlink" title="7. 训练技巧与潜在问题"></a>7. 训练技巧与潜在问题</h3><ul>
+<li>代码中每个iteration都训练一次判别器和一次生成器，比例1:1。实际训练时，若判别器太强，生成器梯度消失，可适当增加生成器训练次数（如判别器每训练k次，生成器训练1次）</li>
+<li>没有使用标签平滑（如将真实标签设为0.9而非1），可能导致判别器过于自信，生成器梯度消失。添加标签平滑可提高鲁棒性。</li>
+<li>生成图像保存时使用了<code>normalize=True</code>，这会将Tensor值范围自动调整到[0,1]再保存，如果生成器输出是[-1,1]，此操作会将其归一化到[0,1]，保存的图像正常。</li>
+<li>真实图像预处理未归一化到[-1,1]可能影响训练，建议增加<code>transforms.Normalize(mean=0.5, std=0.5)</code>将[0,1]映射到[-1,1]。</li>
+</ul>
+<h3 id="8-推理脚本注意事项"><a href="#8-推理脚本注意事项" class="headerlink" title="8. 推理脚本注意事项"></a>8. 推理脚本注意事项</h3><ul>
+<li>必须调用<code>model.eval()</code>关闭BN的训练行为，保证推理一致性。</li>
+<li>保存图像时只取第一张<code>out_img.data[0]</code>，也可保存多张。</li>
+</ul>
+<hr>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>​        这份代码实现了一个标准的DCGAN，结构清晰，注释详细。生成器和判别器采用全卷积架构，利用转置卷积和步长卷积实现上/下采样，批归一化和LeakyReLU等技巧提升了训练稳定性。通过交替优化两个网络，最终生成器能学会从随机噪声中产生逼真的人脸图像。训练过程中保存中间结果和模型权重，便于监控和继续训练。推理脚本可单独使用，加载已训练模型生成新图像。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://ootorikka.github.io">OotoRikka</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://ootorikka.github.io/2026/02/21/GAN%E5%9B%BE%E5%83%8F%E7%94%9F%E6%88%90/">https://ootorikka.github.io/2026/02/21/GAN%E5%9B%BE%E5%83%8F%E7%94%9F%E6%88%90/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="https://imgheybox.max-c.com/avatar/2023/05/21/8240d7f259bc3f23ab194efec4bed575.jpeg?imageMogr2/thumbnail/400x400%3E" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/02/15/Test-0/" title="Test(模板)"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">Next</div><div class="info-item-2">Test(模板)</div></div><div class="info-2"><div class="info-item-1">二级标题三级标题四级标题五级标题六级标题 1. 段落与文字样式这是一个普通段落。Markdown 中段落之间需要有空行。 粗体斜体粗斜体删除线行内代码下划线（HTML 标签）  2. 列表无序列表 项目一 项目二 子项目（缩进两个空格） 另一个子项目   项目三  有序列表 第一步 第二步 子步骤一（缩进四个空格） 子步骤二   第三步   3. 链接与图片链接到 Hexo 官网   4. 引用 这是一段引用。可以跨多行。  嵌套引用    5. 代码行内代码：const a = 1; 多行代码（指定语言）： 12345// JavaScript 示例function hello() &#123;  console.log(&#x27;Hello, world!&#x27;);&#125;hello(); 不指定语言： 1这是一段纯文本代码块。  6. 表格    标题1 标题2 标题3     单元格1 单元格2 单元格3   内容较长 测试 123      7. 分割线  8. 转义字符如果要显示原本的 Markdown 符号，可以用反斜杠转义：*不斜体*、# 不是标题。 ...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="https://imgheybox.max-c.com/avatar/2023/05/21/8240d7f259bc3f23ab194efec4bed575.jpeg?imageMogr2/thumbnail/400x400%3E" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">OotoRikka</div><div class="author-info-description">这里是OotoRikka的Blog</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">Welcome to OotoRikka's Blog ~</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E4%B8%80%EF%BC%9A%E8%AE%AD%E7%BB%83%E8%84%9A%E6%9C%AC%EF%BC%88GAN-train-py%EF%BC%89"><span class="toc-number">1.</span> <span class="toc-text">文件一：训练脚本（GAN_train.py）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%AF%BC%E5%85%A5%E5%BA%93"><span class="toc-number">1.1.</span> <span class="toc-text">1. 导入库</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%8F%82%E6%95%B0%E9%85%8D%E7%BD%AE%E7%B1%BB-Config"><span class="toc-number">1.2.</span> <span class="toc-text">2. 参数配置类 Config</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E7%94%9F%E6%88%90%E7%BD%91%E7%BB%9C-Gnet"><span class="toc-number">1.3.</span> <span class="toc-text">3. 生成网络 Gnet</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%88%A4%E5%88%AB%E7%BD%91%E7%BB%9C-Dnet"><span class="toc-number">1.4.</span> <span class="toc-text">4. 判别网络 Dnet</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E6%95%B0%E6%8D%AE%E5%87%86%E5%A4%87"><span class="toc-number">1.5.</span> <span class="toc-text">5. 数据准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-%E8%AE%BE%E5%A4%87%E4%B8%8E%E7%BD%91%E7%BB%9C%E5%AE%9E%E4%BE%8B%E5%8C%96"><span class="toc-number">1.6.</span> <span class="toc-text">6. 设备与网络实例化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-%E4%BC%98%E5%8C%96%E5%99%A8%E4%B8%8E%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0"><span class="toc-number">1.7.</span> <span class="toc-text">7. 优化器与损失函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-%E6%A0%87%E7%AD%BE%E4%B8%8E%E5%99%AA%E5%A3%B0"><span class="toc-number">1.8.</span> <span class="toc-text">8. 标签与噪声</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-%E5%8A%A0%E8%BD%BD%E5%B7%B2%E6%9C%89%E6%A8%A1%E5%9E%8B%EF%BC%88%E5%8F%AF%E9%80%89%EF%BC%89"><span class="toc-number">1.9.</span> <span class="toc-text">9. 加载已有模型（可选）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-%E8%AE%AD%E7%BB%83%E5%BE%AA%E7%8E%AF"><span class="toc-number">1.10.</span> <span class="toc-text">10. 训练循环</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E4%BA%8C%EF%BC%9A%E6%8E%A8%E7%90%86%E8%84%9A%E6%9C%AC%EF%BC%88inference-py%EF%BC%89"><span class="toc-number">2.</span> <span class="toc-text">文件二：推理脚本（inference.py）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C%E7%BB%93%E6%9E%84"><span class="toc-number">3.</span> <span class="toc-text">神经网络结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E7%94%9F%E6%88%90%E5%99%A8%E4%BD%BF%E7%94%A8%E8%BD%AC%E7%BD%AE%E5%8D%B7%E7%A7%AF%E9%80%90%E6%AD%A5%E4%B8%8A%E9%87%87%E6%A0%B7"><span class="toc-number">3.1.</span> <span class="toc-text">1. 生成器使用转置卷积逐步上采样</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%88%A4%E5%88%AB%E5%99%A8%E4%BD%BF%E7%94%A8%E6%AD%A5%E9%95%BF%E5%8D%B7%E7%A7%AF%E4%B8%8B%E9%87%87%E6%A0%B7"><span class="toc-number">3.2.</span> <span class="toc-text">2. 判别器使用步长卷积下采样</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E6%89%B9%E5%BD%92%E4%B8%80%E5%8C%96%EF%BC%88BN%EF%BC%89%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="toc-number">3.3.</span> <span class="toc-text">3. 批归一化（BN）的作用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E6%BF%80%E6%B4%BB%E5%87%BD%E6%95%B0%E9%80%89%E6%8B%A9"><span class="toc-number">3.4.</span> <span class="toc-text">4. 激活函数选择</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0%E4%B8%8E%E8%AE%AD%E7%BB%83%E7%9B%AE%E6%A0%87"><span class="toc-number">3.5.</span> <span class="toc-text">5. 损失函数与训练目标</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-%E4%BC%98%E5%8C%96%E5%99%A8%E4%B8%8E%E8%B6%85%E5%8F%82%E6%95%B0"><span class="toc-number">3.6.</span> <span class="toc-text">6. 优化器与超参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-%E8%AE%AD%E7%BB%83%E6%8A%80%E5%B7%A7%E4%B8%8E%E6%BD%9C%E5%9C%A8%E9%97%AE%E9%A2%98"><span class="toc-number">3.7.</span> <span class="toc-text">7. 训练技巧与潜在问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-%E6%8E%A8%E7%90%86%E8%84%9A%E6%9C%AC%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="toc-number">3.8.</span> <span class="toc-text">8. 推理脚本注意事项</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/21/GAN%E5%9B%BE%E5%83%8F%E7%94%9F%E6%88%90/" title="GAN图像生成">GAN图像生成</a><time datetime="2026-02-21T07:15:36.000Z" title="Created 2026-02-21 15:15:36">2026-02-21</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/15/Test-0/" title="Test(模板)">Test(模板)</a><time datetime="2026-02-15T06:43:15.451Z" title="Created 2026-02-15 14:43:15">2026-02-15</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/14/hello-world/" title="Hello World">Hello World</a><time datetime="2026-02-14T07:52:49.922Z" title="Created 2026-02-14 15:52:49">2026-02-14</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By OotoRikka</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.1</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"><script>(() => {
+  const loadMathjax = () => {
+    if (!window.MathJax) {
+      window.MathJax = {
+        loader: {
+          load: [
+            // Four font extension packages (optional)
+            //- '[tex]/bbm',
+            //- '[tex]/bboldx',
+            //- '[tex]/dsfont',
+            '[tex]/mhchem'
+          ],
+          paths: {
+            'mathjax-newcm': '[mathjax]/../@mathjax/mathjax-newcm-font',
+
+            //- // Four font extension packages (optional)
+            //- 'mathjax-bbm-extension': '[mathjax]/../@mathjax/mathjax-bbm-font-extension',
+            //- 'mathjax-bboldx-extension': '[mathjax]/../@mathjax/mathjax-bboldx-font-extension',
+            //- 'mathjax-dsfont-extension': '[mathjax]/../@mathjax/mathjax-dsfont-font-extension',
+            'mathjax-mhchem-extension': '[mathjax]/../@mathjax/mathjax-mhchem-font-extension'
+          }
+        },
+        output: {
+          font: 'mathjax-newcm',
+        },
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'none',
+          packages: {
+            '[+]': [
+              'mhchem'
+            ]
+          }
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          enableMenu: true,
+          menuOptions: {
+            settings: {
+              enrich: false  // Turn off Braille and voice narration text automatic generation
+            }
+          },
+          renderActions: {
+            findScript: [10, doc => {
+              for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+                const display = !!node.type.match(/; *mode=display/)
+                const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+                const text = document.createTextNode('')
+                node.parentNode.replaceChild(text, node)
+                math.start = {node: text, delim: '', n: 0}
+                math.end = {node: text, delim: '', n: 0}
+                doc.math.push(math)
+              }
+            }, '']
+          }
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax@4.1.0/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.startup.document.state(0)
+      MathJax.texReset()
+      MathJax.typesetPromise()
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  window.pjax ? loadMathjax() : window.addEventListener('load', loadMathjax)
+})()</script></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
