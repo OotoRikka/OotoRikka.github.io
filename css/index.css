@@ -5625,17 +5625,19 @@ figure.highlight pre .javascript .function {
   display: inline;
 }
 mjx-container {
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 4px;
   max-width: 100%;
 }
 mjx-container[display] {
   display: block !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
   min-width: auto !important;
 }
 mjx-container:not([display]) {
   display: inline-grid !important;
+  overflow: visible;
+  padding-bottom: 0;
 }
 mjx-assistive-mml {
   right: 0;
